@@ -1,13 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 
 public class State
 {
     public int[,] tiles;
 
-    public enum Action
-    {
-        None, Up, Down, Left, Right
-    }
+    public enum Action { Up, Down, Left, Right }
 
     public State(int[,] state) => this.tiles = state;
 
@@ -38,4 +36,32 @@ public class State
     public override int GetHashCode() => ToString().GetHashCode();
 
     public State Copy() => new State(this);
+
+    public List<Action> GetValidActions(State currentState)
+    {
+        List<Action> available = new List<Action>();
+        int[,] board = currentState.tiles;
+        int boardLength = board.GetLength(0);
+        bool found = false;
+
+        for (int i = 0; i < boardLength; i++)
+        {
+            for (int j = 0; j < boardLength; j++)
+            {
+                if (board[i, j] == 0)
+                {
+                    if (i > 0) available.Add(Action.Up);
+                    if (j > 0) available.Add(Action.Left);
+                    if (j < boardLength - 1) available.Add(Action.Right);
+                    if (i < boardLength - 1) available.Add(Action.Down);
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) break;
+        }
+        return available;
+    }
 }
