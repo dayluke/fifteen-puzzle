@@ -1,12 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
+using Random = System.Random;
 
 public class GameManager : MonoBehaviour
 {
     public int length = 4;
     private State currentState;
     private State goal;
-    public bool gameOn { get; set; }
     public GridLayoutGroup grid;
     public GameObject numberPrefab;
 
@@ -17,10 +18,9 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         grid.constraintCount = length;
-        currentState = GoalState();
+        currentState = NewGame();
         goal = GoalState();
         BuildGame();
-        gameOn = false;
     }
 
     private void BuildGame()
@@ -29,14 +29,108 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < length; j++)
             {
-                if (i == length - 1 && j == length - 1) continue;
+                int value = currentState.tiles[i,j];
+                if (value == 0) continue;
 
-                int value = (i * length) + j + 1;
-                
                 GameObject number = Instantiate(numberPrefab, grid.transform);
                 number.GetComponentInChildren<Text>().text = value.ToString();
             }
         }
+    }
+
+    private State NewGame()
+    {
+        Random rand = new Random();
+        bool solvable = false;
+        int[,] board = new int[length, length];
+
+        while (!solvable)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                List<int> usedTiles = new List<int>();
+                for (int j = 0; j < length * length; j++)
+                {
+                    int random;
+
+                    do
+                    {
+                        random = rand.Next(0, length * length);
+                    }
+                    while (usedTiles.Contains(random));
+
+                    usedTiles.Add(random);
+                    board[j % length, j / length] = random;
+                }
+            }
+
+            solvable = IsSolvable(board);
+        }
+
+        return new State(board);
+    }
+
+    private bool IsSolvable(int[,] state)
+    {
+        int[] boardState = ToIntArray(state);
+        int allInversions = Inversions(boardState);
+        int blankRow = FindBlankRow(boardState);
+        if (length % 2 == 1)
+        {
+            return allInversions % 2 == 0;
+        }
+        else
+        {
+            return (allInversions + length - blankRow + 1) % 2 == 0;
+        }
+    }
+
+    private int[] ToIntArray(int[,] doubleArray)
+    {
+        int size = doubleArray.GetLength(0);
+        int[] array = new int[size * size];
+        int count = 0;
+
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                array[count] = doubleArray[i, j];
+                count++;
+            }
+        }
+        return array;
+    }
+
+    private int Inversions(int[] boardState)
+    {
+        int inversions = 0;
+        for (int i = 0; i < boardState.Length - 1; i++)
+        {
+            if (boardState[i] == 0)
+                continue;
+
+            int value = boardState[i];
+            for (int j = i; j < boardState.Length; j++)
+            {
+                if (boardState[j] != 0 && value > boardState[j])
+                {
+                    inversions++;
+                }
+            }
+        }
+
+        return inversions;
+    }
+
+    private int FindBlankRow(int[] boardState)
+    {
+        for (int i = 0; i < boardState.Length; i++)
+        {
+            if (boardState[i] == 0)
+                return i / length;
+        }
+        return -1;
     }
 
     private State GoalState()
@@ -54,8 +148,6 @@ public class GameManager : MonoBehaviour
         }
         return new State(goal);
     }
-
-    public bool IsGoalState() => goal.Equals(currentState);
 
     public State GetCurrentState() => currentState;
 
