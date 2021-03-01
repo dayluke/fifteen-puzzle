@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     private State goal;
     public GridLayoutGroup grid;
     public GameObject numberPrefab;
+    private List<Tile> tiles = new List<Tile>();
 
     /// <summary>
     /// TODO:
@@ -21,6 +22,7 @@ public class GameManager : MonoBehaviour
         currentState = NewGame();
         goal = GoalState();
         BuildGame();
+        UpdateState();
     }
 
     private void BuildGame()
@@ -29,11 +31,23 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < length; j++)
             {
+                Tile tile = Instantiate(numberPrefab, grid.transform).GetComponent<Tile>();
+                tiles.Add(tile);
+            }
+        }
+    }
+
+    private void UpdateState()
+    {
+        for (int i = 0; i < length; i++)
+        {
+            for (int j = 0; j < length; j++)
+            {
                 int value = currentState.tiles[i,j];
                 if (value == 0) continue;
 
-                GameObject number = Instantiate(numberPrefab, grid.transform);
-                number.GetComponentInChildren<Text>().text = value.ToString();
+                int index = (i * length) + j;
+                tiles[index].StateUpdated(value);
             }
         }
     }
