@@ -2,24 +2,27 @@
 
 public class State
 {
-    private int[,] state;
+    public int[,] tiles;
 
-    public State(int[,] state) => this.state = state;
+    public enum Action
+    {
+        None, Up, Down, Left, Right
+    }
 
-    public State(State otherState) => this.state = otherState.GetState();
+    public State(int[,] state) => this.tiles = state;
 
-    public int[,] GetState() => this.state;
+    public State(State otherState) => this.tiles = otherState.tiles;
 
     public override bool Equals(Object obj)
     {
         if (obj is State)
         {
             State aState = (State)obj;
-            for (int i = 0; i < this.state.GetLength(0); i++)
+            for (int i = 0; i < this.tiles.GetLength(0); i++)
             {
-                for (int j = 0; j < this.state.GetLength(0); j++)
+                for (int j = 0; j < this.tiles.GetLength(0); j++)
                 {
-                    if (this.state[i, j] != aState.state[i, j])
+                    if (this.tiles[i, j] != aState.tiles[i, j])
                     {
                         return false;
                     }
@@ -29,6 +32,10 @@ public class State
         }
         return false;
     }
+
+    public bool IsSolved(State state) => this.tiles.Equals(state);
+
+    public override int GetHashCode() => ToString().GetHashCode();
 
     public State Copy() => new State(this);
 }
